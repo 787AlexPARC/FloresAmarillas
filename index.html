@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxia de Flores Amarillas 🌻✨</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Arial, sans-serif; }
+
+    /* Canvas Three.js */
+    #three-canvas {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity 2s ease-in;
+    }
+    #three-canvas.visible { opacity: 1; }
+
+    /* ---------- INTRO ---------- */
+    #intro {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, #1a1200 0%, #000 70%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        cursor: pointer;
+        transition: opacity 1s ease;
+        overflow: hidden;
+    }
+    #intro.hidden { opacity: 0; pointer-events: none; }
+
+    .intro-sunflower {
+        font-size: 180px;
+        line-height: 1;
+        animation: floatPulse 2.5s ease-in-out infinite;
+        filter: drop-shadow(0 0 25px #ffaa00) drop-shadow(0 0 60px #ff8800);
+        transition: transform 0.8s cubic-bezier(0.5, 0, 0.75, 0), opacity 0.8s ease-out;
+        user-select: none;
+    }
+    #intro.bursting .intro-sunflower {
+        transform: scale(6) rotate(180deg);
+        opacity: 0;
+    }
+    @keyframes floatPulse {
+        0%, 100% { transform: scale(1) translateY(0); }
+        50% { transform: scale(1.08) translateY(-10px); }
+    }
+
+    .intro-text {
+        color: #ffe066;
+        font-size: 2rem;
+        letter-spacing: 6px;
+        margin-top: 25px;
+        text-transform: uppercase;
+        text-shadow: 0 0 15px #ffaa00, 0 0 35px #ff8800;
+        animation: textPulse 2s ease-in-out infinite;
+        transition: opacity 0.4s;
+        user-select: none;
+    }
+    #intro.bursting .intro-text { opacity: 0; }
+    @keyframes textPulse {
+        0%, 100% { opacity: 0.7; letter-spacing: 6px; }
+        50% { opacity: 1; letter-spacing: 9px; }
+    }
+
+    .intro-hint {
+        color: rgba(255, 224, 102, 0.5);
+        font-size: 0.9rem;
+        margin-top: 40px;
+        letter-spacing: 2px;
+        animation: textPulse 2s ease-in-out infinite;
+    }
+
+    /* Flash al reventar */
+    #flash {
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(circle at center, #fff9c4 0%, #ffaa00 30%, transparent 70%);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 150;
+        transition: opacity 0.15s ease-out;
+    }
+    #flash.active { opacity: 1; transition: opacity 0.6s ease-out; }
+
+    /* Partículas del estallido */
+    .burst-particle {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 120;
+        background: radial-gradient(circle, #ffffff 0%, #ffe066 30%, #ffaa00 60%, transparent 100%);
+        box-shadow: 0 0 12px #ffcc00, 0 0 25px #ff8800;
+        animation: burstOut 1.4s cubic-bezier(0.15, 0.75, 0.4, 1) forwards;
+    }
+    @keyframes burstOut {
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0);
+            opacity: 0;
+        }
+    }
+    /* ============================================================
+       🌟 AQUÍ PEGAS EL CSS DE LA CARTA
+       ============================================================ */
+    .btn-carta {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #ffaa00, #ffcc00);
+        color: #1a002c;
+        border: 2px solid #ffffff;
+        padding: 14px 28px;
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 0 20px rgba(255, 170, 0, 0.6);
+        z-index: 90; /* Ajustado para estar detrás de la pantalla de intro */
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .btn-carta:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 35px rgba(255, 204, 0, 0.9);
+    }
+    .modal-carta {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 5, 20, 0.75);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 200; /* Por encima de todo para leer cómodamente */
+    }
+    .contenido-carta {
+        background: linear-gradient(145deg, #1f0b35, #0d031a);
+        border: 3px solid #ffcc00;
+        box-shadow: 0 0 50px rgba(255, 204, 0, 0.4);
+        padding: 40px;
+        border-radius: 20px;
+        max-width: 480px;
+        width: 85%;
+        position: relative;
+        color: #fff5c2;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        text-align: center;
+        animation: aparecerCarta 0.4s ease-out forwards;
+    }
+    .contenido-carta h2 {
+        color: #ffcc00;
+        margin-top: 0;
+        font-size: 28px;
+        text-shadow: 0 0 10px rgba(255, 204, 0, 0.5);
+    }
+    .texto-carta {
+        font-size: 16px;
+        line-height: 1.6;
+        text-align: justify;
+    }
+    .close-carta {
+        position: absolute;
+        top: 15px;
+        right: 22px;
+        font-size: 32px;
+        color: #ffaa00;
+        cursor: pointer;
+        transition: color 0.2s;
+        line-height: 1;
+    }
+    .close-carta:hover {
+        color: #ffffff;
+    }
+    .hidden {
+        display: none !important;
+    }
+    @keyframes aparecerCarta {
+        from { transform: scale(0.85); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .firma-autor {
+        position: fixed;
+        bottom: 15px; /* Un poco más abajo que el botón para que sea discreto */
+        left: 20px;
+        color: rgba(255, 255, 255, 0.25); /* Color blanco con 75% de transparencia */
+        font-family: 'Segoe UI', Roboto, sans-serif;
+        font-size: 11px; /* Letra muy pequeña */
+        letter-spacing: 1.5px; /* Espaciado elegante entre letras */
+        text-transform: uppercase; /* En mayúsculas compactas */
+        z-index: 90; /* Igual que el botón para que aparezca tras la intro */
+        pointer-events: none; /* No interrumpe los clics en la pantalla */
+        user-select: none; /* No se puede seleccionar el texto por error */
+        transition: color 0.3s ease;
+    }
+
+    .firma-autor:hover {
+        color: rgba(255, 204, 0, 0.6);
+    }
+
+</style>
+</head>
+<body>
+
+<!-- Canvas de la galaxia (inicialmente oculto) -->
+<canvas id="three-canvas"></canvas>
+
+<!-- Flash al reventar -->
+<div id="flash"></div>
+
+<!-- Pantalla de inicio con girasol -->
+<div id="intro">
+    <div class="intro-sunflower">🌻</div>
+    <div class="intro-text">Presiona</div>
+    <div class="intro-hint">para florecer</div>
+</div>
+
+<button id="btn-carta" class="btn-carta">💌 Abrir Mensaje</button>
+
+    <!-- Estructura de la Carta Interactiva -->
+    <div id="modal-carta" class="modal-carta hidden">
+        <div class="contenido-carta">
+            <span id="close-carta" class="close-carta">&times;</span>
+            <h2>Para ti... 🌻</h2>
+            <p class="texto-carta">
+                Dicen que el 21 de septiembre se regalan flores amarillas para celebrar la vida, la luz y a las personas que hacen que el mundo pese un poco menos. 
+                <br><br>
+                Al igual que los girasoles buscan incansablemente el sol, hay personas que se convierten en nuestro propio refugio de luz. Gracias por tu amistad, por tu paciencia, por coincidir conmigo en este viaje y por regalarme tu calidez incluso en los días grises. 
+                <br><br>
+                Esta galaxia digital está repleta de flores en movimiento, pero ninguna brilla tanto como tu presencia en mi vida. 
+                <br><br>
+                <strong>¡Feliz Día de las Flores Amarillas!</strong>
+            </p>
+        </div>
+    </div>
+    <div class="firma-autor">Creado por Alex Parco</div>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+
+// Crea textura de brillo radial (para el sol central)
+function makeGlowTexture(r, g, b, size = 512) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    grad.addColorStop(0,    `rgba(${r},${g},${b},1)`);
+    grad.addColorStop(0.15, `rgba(${r},${g},${b},0.85)`);
+    grad.addColorStop(0.35, `rgba(${r},${g},${b},0.4)`);
+    grad.addColorStop(0.65, `rgba(${r},${g},${b},0.1)`);
+    grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+}
+
+// Crea un sprite de texto con glow inteligente y borde de contraste
+function makeTextSprite(text, opts = {}) {
+    const fontSize  = opts.fontSize  || 44;
+    const color     = opts.color     || '#ffe066';
+    const glow      = opts.glow      || '#ffaa00';
+    const targetH   = opts.height    || 1.2;
+    const weight    = opts.weight    || 700;
+    const italic    = opts.italic ? 'italic ' : '';
+    const font      = `${italic}${weight} ${fontSize}px "Segoe UI", Arial, sans-serif`;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.font = font;
+    const metrics = ctx.measureText(text);
+
+    // Ampliamos un poco el padding para que el contorno negro y el glow no se corten en los bordes
+    const padX = fontSize * 1.5;
+    const padY = fontSize * 1.2;
+    canvas.width  = Math.ceil(metrics.width + padX * 2);
+    canvas.height = Math.ceil(fontSize + padY * 2);
+
+    const c = canvas.getContext('2d');
+    c.font = font;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    // 🌟 PASO 1: Dibujar un contorno negro grueso de seguridad.
+    // Esto salvará la legibilidad de la letra cuando pase por encima de la luz blanca.
+    c.lineWidth = fontSize * 0.22; // Grosor del borde proporcional al tamaño de fuente
+    c.strokeStyle = '#000000';    // Negro absoluto
+    c.lineJoin = 'round';
+    c.strokeText(text, cx, cy);
+
+    // 🌟 PASO 2: Tu Glow de color característico
+    c.shadowColor = glow;
+    c.shadowBlur = fontSize * 0.7;
+    c.fillStyle = color;
+    c.fillText(text, cx, cy);
+    c.fillText(text, cx, cy);
+
+    // 🌟 PASO 3: Núcleo de la letra (Cambiado a un color sólido para que no se evapore)
+    c.shadowBlur = 0;             // Apagamos la sombra para que el centro sea nítido
+    c.fillStyle = color;          // Usamos el color de la frase en vez de blanco puro (#fffbe6)
+    c.fillText(text, cx, cy);
+
+    // Volvemos a aplicar un stroke sutil al final para limpiar imperfecciones
+    c.lineWidth = fontSize * 0.05;
+    c.strokeStyle = '#000000';
+    c.strokeText(text, cx, cy);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.anisotropy = 4;
+
+    const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        // 🌟 CAMBIO CLAVE: Cambiamos AdditiveBlending por NormalBlending
+        // Al usar Normal, el color del sprite "pisa" y tapa al fondo en lugar de fundirse y desaparecer
+        blending: THREE.NormalBlending 
+    });
+
+    const sprite = new THREE.Sprite(mat);
+    const scale = targetH / canvas.height;
+    sprite.scale.set(canvas.width * scale, canvas.height * scale, 1);
+    return sprite;
+}
+
+// Crea un sprite con un emoji (flores, estrellas...)
+function makeEmojiSprite(emoji, size = 1.4) {
+    const s = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = s;
+    const ctx = canvas.getContext('2d');
+    ctx.font = `${s*0.85}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(255,200,0,0.9)';
+    ctx.shadowBlur = 22;
+    ctx.fillText(emoji, s/2, s/2 + s*0.03);
+    ctx.shadowBlur = 0;
+    ctx.fillText(emoji, s/2, s/2 + s*0.03);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const mat = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+        opacity: 0.95
+    });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(size, size, 1);
+    return sprite;
+}
+
+/* ============================================================
+   ESCENA PRINCIPAL
+   ============================================================ */
+
+const canvas = document.getElementById('three-canvas');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.1, 2000);
+camera.position.set(0, 6, 26);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.55;
+controls.enablePan = false;
+controls.minDistance = 10;
+controls.maxDistance = 55;
+controls.target.set(0, 0, 0);
+
+/* -------- Postprocessing: Bloom -------- */
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(
+    new THREE.Vector2(innerWidth, innerHeight),
+    1.35,   // strength
+    0.9,    // radius
+    0.05    // threshold
+);
+composer.addPass(bloom);
+
+/* ============================================================
+   CENTRO: AGUJERO NEGRO + DISCO DORADO
+   ============================================================ */
+
+const centerGroup = new THREE.Group();
+scene.add(centerGroup);
+
+// Glow gigante detrás
+const glowTex = makeGlowTexture(255, 150, 30);
+const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    opacity: 0.25
+}));
+glowSprite.scale.set(22, 22, 1);
+centerGroup.add(glowSprite);
+
+// Segundo halo más anaranjado
+const glowTex2 = makeGlowTexture(200, 60, 10);
+const glowSprite2 = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex2,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    opacity: 0.20
+}));
+glowSprite2.scale.set(32, 32, 1);
+centerGroup.add(glowSprite2);
+
+// Esfera negra central
+const blackHole = new THREE.Mesh(
+    new THREE.SphereGeometry(2.1, 64, 64),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+);
+centerGroup.add(blackHole);
+
+// Anillo interior brillante (torus achatado)
+const ringMat = new THREE.MeshBasicMaterial({
+    color: 0x442200,
+    transparent: true,
+    opacity: 0.55,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide
+});
+const innerRing = new THREE.Mesh(
+    new THREE.TorusGeometry(3.2, 0.35, 32, 128),
+    ringMat
+);
+innerRing.rotation.x = Math.PI / 2;
+centerGroup.add(innerRing);
+
+const midRing = new THREE.Mesh(
+    new THREE.TorusGeometry(5.2, 0.28, 32, 128),
+    new THREE.MeshBasicMaterial({
+        color: 0x663300,
+        transparent: true,
+        opacity: 0.08,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide
+    })
+);
+midRing.rotation.x = Math.PI / 2;
+centerGroup.add(midRing);
+
+// Disco de partículas (acreción)
+const DISC_COUNT = 6000;
+const discPositions = new Float32Array(DISC_COUNT * 3);
+const discColors    = new Float32Array(DISC_COUNT * 3);
+const discSizes     = new Float32Array(DISC_COUNT);
+
+for (let i = 0; i < DISC_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    // Distribución más densa hacia el interior
+    const t = Math.random();
+    const r = 2.4 + Math.pow(t, 1.6) * 9;
+    const flatness = 0.35 * (r / 6);
+    const y = (Math.random() - 0.5) * flatness * 2;
+
+    discPositions[i*3]   = Math.cos(angle) * r;
+    discPositions[i*3+1] = y;
+    discPositions[i*3+2] = Math.sin(angle) * r;
+
+    // Colores: blanco-amarillo cerca del centro → naranja lejos
+    const colT = Math.min(1, (r - 2.4) / 8);
+    
+    // Al bajar el valor base de R, G y B evitamos el "fogonazo" blanco puro
+    const R = 0.85;                     // Bajado de 1.0 para suavizar
+    const G = 0.50 - colT * 0.25;       // Un dorado más ámbar/naranja
+    const B = 0.12 - colT * 0.12;       // Reducimos drásticamente el azul para eliminar el blanco puro
+
+    discColors[i*3]   = R;
+    discColors[i*3+1] = Math.max(0.05, G);
+    discColors[i*3+2] = Math.max(0.0, B);
+
+    // Hacemos que los puntos más cercanos al centro sean ligeramente más pequeños
+    // de esa forma la densidad de partículas no bloquea la tipografía
+    const sizeFactor = r < 4.5 ? 0.6 : 1.0;
+    discSizes[i] = (0.05 + Math.random() * 0.08) * sizeFactor;
+}
+
+const discGeo = new THREE.BufferGeometry();
+discGeo.setAttribute('position', new THREE.BufferAttribute(discPositions, 3));
+discGeo.setAttribute('color',    new THREE.BufferAttribute(discColors, 3));
+discGeo.setAttribute('size',     new THREE.BufferAttribute(discSizes, 1));
+
+const discMat = new THREE.PointsMaterial({
+    size: 0.08,             // Bajado de 0.11 para que los puntos sean más finos y estilizados
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.65,          // Bajado de 0.95 para permitir que las letras respiren
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+});
+const discPoints = new THREE.Points(discGeo, discMat);
+centerGroup.add(discPoints);
+
+// Disco más lejano y tenue
+const DISC2_COUNT = 3000;
+const disc2Positions = new Float32Array(DISC2_COUNT * 3);
+const disc2Colors    = new Float32Array(DISC2_COUNT * 3);
+for (let i = 0; i < DISC2_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 8 + Math.pow(Math.random(), 1.8) * 14;
+    const y = (Math.random() - 0.5) * 0.7;
+    disc2Positions[i*3]   = Math.cos(angle) * r;
+    disc2Positions[i*3+1] = y;
+    disc2Positions[i*3+2] = Math.sin(angle) * r;
+    const c = 0.6 + Math.random() * 0.4;
+    disc2Colors[i*3]   = c;
+    disc2Colors[i*3+1] = c * 0.7;
+    disc2Colors[i*3+2] = c * 0.15;
+}
+const disc2Geo = new THREE.BufferGeometry();
+disc2Geo.setAttribute('position', new THREE.BufferAttribute(disc2Positions, 3));
+disc2Geo.setAttribute('color',    new THREE.BufferAttribute(disc2Colors, 3));
+const disc2Mat = new THREE.PointsMaterial({
+    size: 0.13,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.55,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+});
+const disc2Points = new THREE.Points(disc2Geo, disc2Mat);
+centerGroup.add(disc2Points);
+
+/* ============================================================
+   FONDO DE ESTRELLAS
+   ============================================================ */
+
+const starCount = 2200;
+const starPos = new Float32Array(starCount * 3);
+const starCol = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+    const r = 40 + Math.random() * 260;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    starPos[i*3]   = Math.sin(phi) * Math.cos(theta) * r;
+    starPos[i*3+1] = Math.sin(phi) * Math.sin(theta) * r;
+    starPos[i*3+2] = Math.cos(phi) * r;
+    const t = Math.random();
+    starCol[i*3]   = 1.0;
+    starCol[i*3+1] = 0.85 + t * 0.15;
+    starCol[i*3+2] = 0.6 + t * 0.4;
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+starGeo.setAttribute('color',    new THREE.BufferAttribute(starCol, 3));
+const starMat = new THREE.PointsMaterial({
+    size: 0.55,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// Estrellas pequeñas de fondo
+const smallStarCount = 1500;
+const smallStarPos = new Float32Array(smallStarCount * 3);
+for (let i = 0; i < smallStarCount; i++) {
+    smallStarPos[i*3]   = (Math.random() - 0.5) * 400;
+    smallStarPos[i*3+1] = (Math.random() - 0.5) * 400;
+    smallStarPos[i*3+2] = (Math.random() - 0.5) * 400;
+}
+const smallStarGeo = new THREE.BufferGeometry();
+smallStarGeo.setAttribute('position', new THREE.BufferAttribute(smallStarPos, 3));
+const smallStarMat = new THREE.PointsMaterial({
+    color: 0xffeeaa,
+    size: 0.3,
+    transparent: true,
+    opacity: 0.6,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+});
+scene.add(new THREE.Points(smallStarGeo, smallStarMat));
+
+/* ============================================================
+   FRASES FLOTANTES
+   ============================================================ */
+
+const bigPhrases = [
+    { t: 'Tu amistad, mi lugar favorito',          h: 1.7, c: '#0a1128', g: '#0077ff' },
+    { t: 'Feliz Día de las Flores Amarillas',      h: 1.9, c: '#0a1128', g: '#0077ff' },
+    { t: 'Pétalos dorados solo para ti',           h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Contigo el día pesa menos',              h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Gracias por sumar luz a mis días',       h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Esta flor guarda un abrazo para ti',     h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Tu cariño no pasa de moda',              h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Contigo todo lugar es bonito',           h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Contigo las tardes se hacen cortas',     h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'El amarillo también dice te quiero',     h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Feliz día, pienso en ti con cariño',     h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Como el girasol, miro hacia ti',         h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: '21 de septiembre, contigo siempre',      h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Quiero que sepas cuánto importas',       h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Un ramo de gracias por estar ahí',       h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Gracias por quedarte siempre',           h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Aquí siempre tienes un lugar',           h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Miras lo bueno como el girasol',         h: 1.5, c: '#0a1128', g: '#0077ff' },
+    { t: 'Un motivo para quererte',                h: 1.6, c: '#0a1128', g: '#0077ff' },
+    { t: 'Tu amistad es mi tesoro',                h: 1.6, c: '#0a1128', g: '#0077ff' },
+];
+
+const smallPhrases = [
+    'Gracias por tu amistad',
+    'Con cariño para ti',
+    'Siempre juntos',
+    'Pienso en ti',
+    'Gracias por estar',
+    'Un detalle bonito',
+    'Tu sonrisa ilumina',
+    'Florece conmigo',
+    'Eres especial',
+    'Un abrazo dorado',
+    'Brillas mucho',
+    'Gracias por tanto',
+    'Eres mi girasol',
+    'Sigue brillando',
+    'Con mucho amor',
+    'Para ti, con cariño',
+    'Un sol en mi vida',
+    'Luz de mis días',
+    'Gracias, de verdad',
+    'Tu luz no se apaga',
+    'Un pétalo para ti',
+    'Eres puro sol',
+    'Te quiero mucho',
+    'Siempre a tu lado',
+    'Como el 21 de septiembre',
+];
+
+// Colocar frases grandes alrededor de la galaxia
+const phrasesGroup = new THREE.Group();
+scene.add(phrasesGroup);
+
+function randomInRing(rMin, rMax, yMax = 9) {
+    const a = Math.random() * Math.PI * 2;
+    const r = rMin + Math.random() * (rMax - rMin);
+    return {
+        x: Math.cos(a) * r,
+        y: (Math.random() - 0.5) * yMax,
+        z: Math.sin(a) * r
+    };
+}
+
+// Frases grandes: en una corona alrededor
+bigPhrases.forEach((p, i) => {
+    const sprite = makeTextSprite(p.t, {
+        fontSize: 46,
+        height: p.h,
+        color: p.c,
+        glow: p.g
+    });
+
+    sprite.material.transparent = true;
+    sprite.material.opacity = 0;              // Nace invisible
+    sprite.userData.isSmall = false;           // Marcamos que es una frase grande
+
+    // Distribuir en corona
+    const angle = (i / bigPhrases.length) * Math.PI * 2 + Math.random() * 0.5;
+    const radius = 14 + Math.random() * 8;
+    sprite.position.set(
+        Math.cos(angle) * radius,
+        (Math.random() - 0.5) * 12,
+        Math.sin(angle) * radius
+    );
+    sprite.userData.baseY = sprite.position.y;
+    sprite.userData.floatSpeed = 0.5 + Math.random() * 0.7;
+    sprite.userData.floatPhase = Math.random() * Math.PI * 2;
+    sprite.userData.rotSpeed = (Math.random() - 0.5) * 0.15;
+    phrasesGroup.add(sprite);
+});
+
+// Frases pequeñas: más alejadas y numerosas
+smallPhrases.forEach((text, i) => {
+    const sprite = makeTextSprite(text, {
+        fontSize: 22,
+        height: 0.55 + Math.random() * 0.25,
+        color: '#1a002c',
+        glow: '#e600ff',
+        weight: 500,
+        italic: Math.random() > 0.6
+    });
+    sprite.material.transparent = true;
+    sprite.material.opacity = 0;              // Nace invisible
+    sprite.userData.isSmall = true;            // Marcamos que es una frase pequeña
+
+    const pos = randomInRing(16, 32, 16);
+    sprite.position.set(pos.x, pos.y, pos.z);
+    sprite.userData.baseY = pos.y;
+    sprite.userData.floatSpeed = 0.4 + Math.random() * 0.8;
+    sprite.userData.floatPhase = Math.random() * Math.PI * 2;
+    sprite.userData.rotSpeed = (Math.random() - 0.5) * 0.2;
+    phrasesGroup.add(sprite);
+});
+
+/* ============================================================
+   FLORES ALREDEDOR (girasoles, flores amarillas, estrellas)
+   ============================================================ */
+
+const flowersGroup = new THREE.Group();
+scene.add(flowersGroup);
+
+const flowerEmojis = ['🌻', '🌻', '🌻', '🌼', '🌼', '💛', '💐', '✨', '🌟', '🌻'];
+
+// Muchas flores alrededor en distintos radios
+for (let i = 0; i < 140; i++) { // Subido de 90 a 140 para que no quede vacío al expandirse
+    const emoji = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+    const isBig = emoji === '🌻' && Math.random() > 0.55;
+    const size = isBig ? (1.6 + Math.random() * 1.4) : (0.7 + Math.random() * 0.8);
+
+    const sprite = makeEmojiSprite(emoji, size);
+
+    // 🌟 DISTRIBUCIÓN EXPANDIDA (Evita huecos al retroceder)
+    const angle = Math.random() * Math.PI * 2;
+    
+    // Cambiamos el exponente a 1.2 para que más flores se queden en los bordes lejanos
+    // Aumentamos el radio máximo de 34 a 58 unidades
+    const radius = 6 + Math.pow(Math.random(), 1.2) * 52; 
+    
+    // Controlamos la dispersión vertical en relación al radio para que parezca un disco galáctico
+    const y = (Math.random() - 0.5) * (4 + radius * 0.35);
+
+    sprite.position.set(
+        Math.cos(angle) * radius,
+        y,
+        Math.sin(angle) * radius
+    );
+
+    sprite.userData.baseY = y;
+    sprite.userData.floatSpeed = 0.3 + Math.random() * 0.9;
+    sprite.userData.floatPhase = Math.random() * Math.PI * 2;
+    sprite.userData.rotSpeed = (Math.random() - 0.5) * 0.4;
+    sprite.userData.spin = (Math.random() - 0.5) * 0.02;
+
+    flowersGroup.add(sprite);
+}
+
+// Algunos girasoles muy grandes, cerca, alrededor del agujero
+for (let i = 0; i < 8; i++) {
+    const sprite = makeEmojiSprite('🌻', 2.6 + Math.random() * 1.5);
+    const angle = (i / 8) * Math.PI * 2 + Math.random() * 0.3;
+    const radius = 11 + Math.random() * 4;
+    sprite.position.set(
+        Math.cos(angle) * radius,
+        (Math.random() - 0.5) * 3,
+        Math.sin(angle) * radius
+    );
+    sprite.userData.baseY = sprite.position.y;
+    sprite.userData.floatSpeed = 0.4 + Math.random() * 0.5;
+    sprite.userData.floatPhase = Math.random() * Math.PI * 2;
+    sprite.userData.rotSpeed = (Math.random() - 0.5) * 0.2;
+    sprite.userData.spin = (Math.random() - 0.5) * 0.01;
+    flowersGroup.add(sprite);
+}
+
+/* ============================================================
+   POLVO DORADO FLOTANTE
+   ============================================================ */
+
+const dustCount = 900;
+const dustPos = new Float32Array(dustCount * 3);
+const dustCol = new Float32Array(dustCount * 3);
+for (let i = 0; i < dustCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 3 + Math.pow(Math.random(), 0.8) * 30;
+    dustPos[i*3]   = Math.cos(a) * r;
+    dustPos[i*3+1] = (Math.random() - 0.5) * 14;
+    dustPos[i*3+2] = Math.sin(a) * r;
+
+    const t = Math.random();
+    dustCol[i*3]   = 1.0;
+    dustCol[i*3+1] = 0.75 + t * 0.25;
+    dustCol[i*3+2] = 0.3 + t * 0.5;
+}
+const dustGeo = new THREE.BufferGeometry();
+dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+dustGeo.setAttribute('color',    new THREE.BufferAttribute(dustCol, 3));
+const dustMat = new THREE.PointsMaterial({
+    size: 0.18,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+});
+const dust = new THREE.Points(dustGeo, dustMat);
+scene.add(dust);
+
+/* ============================================================
+   LUCES
+   ============================================================ */
+scene.add(new THREE.AmbientLight(0x553311, 0.8));
+const pointLight = new THREE.PointLight(0xffaa44, 1.2, 45);
+pointLight.position.set(0, 2, 0);
+scene.add(pointLight);
+
+/* ============================================================
+   ANIMACIÓN (Con efecto Fade-In integrado)
+   ============================================================ */
+const clock = new THREE.Clock();
+
+function animate() {
+    requestAnimationFrame(animate);
+    const t = performance.now() * 0.001;
+    const dt = clock.getDelta();
+
+    // Rotación del disco
+    discPoints.rotation.y += 0.0018;
+    disc2Points.rotation.y -= 0.0009;
+    innerRing.rotation.z += 0.003;
+    midRing.rotation.z -= 0.002;
+
+    // Pulso del glow central (Ajustado a las nuevas escalas optimizadas 22 y 32)
+    const pulse = 1 + Math.sin(t * 1.5) * 0.06;
+    glowSprite.scale.set(22 * pulse, 22 * pulse, 1);   // Cambiado a 22 base para balancear la luz
+    glowSprite2.scale.set(32 * pulse, 32 * pulse, 1); // Cambiado a 32 base para balancear la luz
+
+    // Rotación general de la galaxia
+    centerGroup.rotation.y += 0.0009;
+    phrasesGroup.rotation.y += 0.0006;
+    flowersGroup.rotation.y += 0.0008;
+
+    // Estrellas
+    stars.rotation.y += 0.0001;
+    dust.rotation.y += 0.0004;
+
+    // Flotación de frases y flores
+    phrasesGroup.children.forEach(s => {
+        s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.floatPhase) * 0.6;
+        if (s.material.rotation !== undefined) {
+            s.material.rotation += s.userData.rotSpeed * dt;
+        }
+
+        // 🌟 NUEVO: EFECTO FADE-IN (Incrementa la opacidad en cada frame)
+        if (s.material && s.material.opacity !== undefined) {
+            // Si es frase pequeña sube hasta 0.75 (para no saturar), si es grande sube a 1.0
+            const maxOpacity = s.userData.isSmall ? 0.75 : 1.0;
+            if (s.material.opacity < maxOpacity) {
+                s.material.opacity += 0.015; // Velocidad de la aparición inicial
+            }
+        }
+    });
+    
+    flowersGroup.children.forEach(s => {
+        s.position.y = s.userData.baseY + Math.sin(t * s.userData.floatSpeed + s.userData.floatPhase) * 0.8;
+        if (s.material.rotation !== undefined) {
+            s.material.rotation += s.userData.rotSpeed * dt;
+        }
+        const sp = s.userData.spin || 0;
+        s.scale.x *= (1 + sp * 0.02);
+        s.scale.y *= (1 - sp * 0.02);
+    });
+
+    controls.update();
+    composer.render();
+}
+animate();
+
+/* ============================================================
+   RESIZE
+   ============================================================ */
+addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    composer.setSize(innerWidth, innerHeight);
+});
+
+/* ============================================================
+   INTRO: CLICK → BURST → REVELAR GALAXIA
+   ============================================================ */
+const intro = document.getElementById('intro');
+const flash = document.getElementById('flash');
+const threeCanvas = document.getElementById('three-canvas');
+
+let bursted = false;
+
+function doBurst(clientX, clientY) {
+    if (bursted) return;
+    bursted = true;
+
+    // Marca la intro como reventando
+    intro.classList.add('bursting');
+
+    // Flash blanco
+    flash.classList.add('active');
+    setTimeout(() => flash.classList.remove('active'), 100);
+
+    // Partículas del estallido (muchas, en todas direcciones)
+    const colors = ['#fff9c4', '#ffe066', '#ffcc00', '#ffaa00', '#ff8800', '#ffffff'];
+    const count = 70;
+    for (let i = 0; i < count; i++) {
+        const p = document.createElement('div');
+        p.className = 'burst-particle';
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+        const distance = 200 + Math.random() * 600;
+        const size = 6 + Math.random() * 14;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        p.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+        p.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.background = `radial-gradient(circle, #ffffff 0%, ${color} 40%, transparent 100%)`;
+        p.style.boxShadow = `0 0 ${size*2}px ${color}, 0 0 ${size*4}px ${color}`;
+        p.style.animationDelay = (Math.random() * 0.15) + 's';
+
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 1600);
+    }
+
+    // Después del estallido: fade out intro + fade in galaxia
+    setTimeout(() => {
+        intro.classList.add('hidden');
+        threeCanvas.classList.add('visible');
+
+        // Pequeño zoom de cámara al aparecer
+        const startZ = camera.position.z;
+        const targetZ = 20;
+        const t0 = performance.now();
+        function zoomIn() {
+            const k = Math.min(1, (performance.now() - t0) / 2200);
+            const e = 1 - Math.pow(1 - k, 3);
+            camera.position.z = startZ + (targetZ - startZ) * e;
+            if (k < 1) requestAnimationFrame(zoomIn);
+        }
+        zoomIn();
+    }, 700);
+
+    setTimeout(() => intro.remove(), 2000);
+}
+
+// Click / tap
+intro.addEventListener('click', (e) => doBurst(e.clientX, e.clientY));
+intro.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    doBurst(touch.clientX, touch.clientY);
+}, { passive: true });
+
+// También con teclado (por accesibilidad)
+addEventListener('keydown', (e) => {
+    if (!bursted && (e.key === 'Enter' || e.key === ' ')) {
+        doBurst(innerWidth/2, innerHeight/2);
+    }
+
+    
+});
+
+    const btnCarta = document.getElementById('btn-carta');
+    const modalCarta = document.getElementById('modal-carta');
+    const closeCarta = document.getElementById('close-carta');
+
+    btnCarta.addEventListener('click', () => {
+        modalCarta.classList.remove('hidden');
+    });
+
+    closeCarta.addEventListener('click', () => {
+        modalCarta.classList.add('hidden');
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === modalCarta) {
+            modalCarta.classList.add('hidden');
+        }
+    });
+</script>
+</body>
+</html>
