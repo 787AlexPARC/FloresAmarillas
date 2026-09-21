@@ -195,25 +195,6 @@
         from { transform: scale(0.85); opacity: 0; }
         to { transform: scale(1); opacity: 1; }
     }
-    .firma-autor {
-        position: fixed;
-        bottom: 15px; /* Un poco más abajo que el botón para que sea discreto */
-        left: 20px;
-        color: rgba(255, 255, 255, 0.25); /* Color blanco con 75% de transparencia */
-        font-family: 'Segoe UI', Roboto, sans-serif;
-        font-size: 11px; /* Letra muy pequeña */
-        letter-spacing: 1.5px; /* Espaciado elegante entre letras */
-        text-transform: uppercase; /* En mayúsculas compactas */
-        z-index: 90; /* Igual que el botón para que aparezca tras la intro */
-        pointer-events: none; /* No interrumpe los clics en la pantalla */
-        user-select: none; /* No se puede seleccionar el texto por error */
-        transition: color 0.3s ease;
-    }
-
-    .firma-autor:hover {
-        color: rgba(255, 204, 0, 0.6);
-    }
-
 </style>
 </head>
 <body>
@@ -249,7 +230,6 @@
             </p>
         </div>
     </div>
-    <div class="firma-autor">Creado por Alex Parco</div>
 
 <script type="importmap">
 {
